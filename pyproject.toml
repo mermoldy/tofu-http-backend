@@ -1,0 +1,7 @@
+[project]
+name = "tofu-http-backend"
+version = "0.1.0"
+description = "Implementation of the OpenTofu HTTP backend as part of the Scalr home assignment"
+readme = "README.md"
+requires-python = ">=3.13.0"
+dependencies = []
