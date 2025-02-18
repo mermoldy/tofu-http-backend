@@ -169,3 +169,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Local OpenTofu development files
+.terraform
+.terraform.lock.hcl
