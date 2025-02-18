@@ -173,3 +173,4 @@ cython_debug/
 # Local OpenTofu development files
 .terraform
 .terraform.lock.hcl
+errored.tfstate
