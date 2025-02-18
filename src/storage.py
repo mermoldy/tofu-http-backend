@@ -30,6 +30,8 @@ class NotFound(Error):
 class StorageBackend:
     """The storage backend interface."""
 
+    name: str
+
     def get(self, state_id: str) -> bytes:
         raise NotImplementedError()
 
@@ -41,6 +43,8 @@ class StorageBackend:
 
 
 class MinioStorageBackend(StorageBackend):
+    name = "MinIO"
+
     def __init__(self) -> None:
         self._client = minio.Minio(
             config.minio_host,

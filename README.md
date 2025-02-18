@@ -1,4 +1,4 @@
-# home-assigment-tofu-http-backend
+# Tofu HTTP Backend
 
 Implementation of the OpenTofu HTTP backend as part of the Scalr home assignment: <https://github.com/Scalr/home-assigment-tofu-http-backend>
 
@@ -20,6 +20,16 @@ $~ uv sync
 
 ```console
 $~ ./cli.py dev
+```
+
+## Automatic docs
+
+The JSON Schemas of your models will be part of your OpenAPI generated schema, and will be shown in the interactive API docs at <http://127.0.0.1:8000/docs> adress.
+
+## Run the tests
+
+```console
+$~ pytest
 ```
 
 ## Dev notes

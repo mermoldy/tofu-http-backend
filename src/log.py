@@ -20,9 +20,6 @@ def drop_color_message_key(_, __, event_dict: EventDict) -> EventDict:
     return event_dict
 
 
-import fastapi.logger
-
-
 def setup_logging(level: str = "INFO") -> None:
     """Configure the logging pipeline with Uvicorn's compatibility layer."""
     shared_processors: list[Processor] = [
@@ -35,7 +32,6 @@ def setup_logging(level: str = "INFO") -> None:
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.processors.StackInfoRenderer(),
     ]
-    fastapi.logger.logger.setLevel("DEBUG")
 
     structlog.configure(
         processors=shared_processors + [structlog.stdlib.ProcessorFormatter.wrap_for_formatter],

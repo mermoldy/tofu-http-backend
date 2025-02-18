@@ -13,6 +13,7 @@ dependencies = [
     "click==8.1.*",
     "python-dotenv==1.0.*",
     "lazy-object-proxy==1.10.*",
+    "orjson==3.10.*",
     "pydantic-settings==2.7.*",
 ]
 
