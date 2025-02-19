@@ -60,3 +60,10 @@ For production-ready locking, a backend that natively supports locks should be u
 ## Dev notes
 
 - The structlog/uvicorn/fastapi configuration pattern is based on <https://gist.github.com/nymous/f138c7f06062b7c43c060bf03759c29e>.
+
+## Plan
+
+- Implement basic auth.
+- Add more tests and docs for tesing
+- Finalize docs and add some examples.
+- Final review and testing.
