@@ -77,6 +77,7 @@ select = [
     "S",      # flake8-bandit
 ]
 ignore = ["ANN001", "ANN002", "ANN003"]
+exclude = ["tests"]
 
 fixable = ["I"]
 

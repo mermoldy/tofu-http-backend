@@ -1,4 +1,4 @@
-log_level = "debug"
+log_level = "info"
 
 # XXX: Public keys for the public MinIO service provided by
 # the MinIO team for testing.

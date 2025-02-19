@@ -1,48 +1,57 @@
 """
-The remote storage backend for the HTTP state sever.
-
-The default backend uses the MinIO server public playground.
+The remote storage backend for the HTTP state server.
 """
 
 import functools
 import io
+from typing import Protocol
 
 import lazy_object_proxy
 import minio
 import minio.error
 
+from src import errors
 from src import log
 from src.config import config
 
-__all__ = ["get_client"]
+__all__ = ["default", "MinioStorageBackend", "Error", "NotFound"]
 
 LOG = log.get_logger(__name__)
 
 
-class Error(Exception):
+class Error(errors.Error):
     """The storage backend error."""
 
 
 class NotFound(Error):
-    """When requested object ID not found."""
+    """Raised when requested object ID not found."""
 
 
-class StorageBackend:
-    """The storage backend interface."""
+class StorageBackend(Protocol):
+    """Protocol for storage backends."""
 
     name: str
 
-    def get(self, state_id: str) -> bytes:
-        raise NotImplementedError()
+    def get(self, key: str) -> bytes:
+        """Fetch data for the given `key`."""
+        ...
 
-    def create(self, state_id: str, data: bytes) -> None:
-        raise NotImplementedError()
+    def create(self, key: str, data: bytes) -> None:
+        """Save `data` to the given `key`."""
+        ...
 
-    def delete(self, state_id: str) -> None:
-        raise NotImplementedError()
+    def delete(self, key: str) -> None:
+        """Delete data by `key`."""
+        ...
 
 
-class MinioStorageBackend(StorageBackend):
+class MinioStorageBackend:
+    """
+    Storage Backend implementation using MinIO.
+
+    Look at how cool this is: https://github.com/minio/minio!
+    """
+
     name = "MinIO"
 
     def __init__(self) -> None:
@@ -55,48 +64,63 @@ class MinioStorageBackend(StorageBackend):
         super().__init__()
 
     def _exists_bucket(self) -> bool:
-        return self._client.bucket_exists(self._bucket_name)
+        """Check if the bucket exists in the MinIO storage."""
+        try:
+            return self._client.bucket_exists(self._bucket_name)
+        except minio.error.MinioException as err:
+            raise Error(str(err))
 
     def _create_bucket(self) -> None:
+        """Create the bucket in the MinIO storage."""
         self._client.make_bucket(self._bucket_name)
-        LOG.info("Created Minio bucket.", bucket_name=self._bucket_name)
+        LOG.info("Created MinIO bucket.", bucket_name=self._bucket_name)
 
-    def get(self, state_id: str) -> bytes:
-        """Get an object in a minio bucket."""
+    def get(self, key: str) -> bytes:
+        """Get an object in a MinIO bucket."""
         if not self._exists_bucket():
-            raise NotFound(f"The {state_id} object not found.")
+            raise NotFound(f"The {key} object not found.")
 
         try:
-            data = self._client.get_object(self._bucket_name, state_id)
+            return self._client.get_object(self._bucket_name, key).read()
         except minio.error.S3Error as err:
             raise NotFound(str(err))
+        except minio.error.MinioException as err:
+            raise Error(str(err))
 
-        return data.read()
-
-    def create(self, state_id: str, data: bytes) -> None:
-        """Create an object in a minio bucket."""
+    def create(self, key: str, data: bytes) -> None:
+        """Create an object in the MinIO storage."""
         if not self._exists_bucket():
             self._create_bucket()
-        self._client.put_object(
-            self._bucket_name, state_id, io.BytesIO(data), length=len(data), metadata={"Owner": ""}
-        )
-
-    def delete(self, state_id: str) -> None:
-        """Delete an object from a minio bucket."""
-        if not self._exists_bucket():
-            raise NotFound(f"The {state_id} object not found.")
 
         try:
-            self._client.remove_object(self._bucket_name, state_id)
+            self._client.put_object(
+                self._bucket_name, key, io.BytesIO(data), length=len(data), metadata={"Owner": ""}
+            )
+        except minio.error.MinioException as err:
+            raise Error(str(err))
+
+    def delete(self, key: str) -> None:
+        """Delete an object from the MinIO storage."""
+        if not self._exists_bucket():
+            raise NotFound(f"The {key} object not found.")
+
+        try:
+            self._client.remove_object(self._bucket_name, key)
         except minio.error.S3Error as err:
             raise NotFound(str(err))
+        except minio.error.MinioException as err:
+            raise Error(str(err))
 
 
 @functools.lru_cache
-def get_default_storage() -> StorageBackend:
-    """Create the storage backend."""
-    return MinioStorageBackend()
+def create_default_backend() -> StorageBackend:
+    """Create the default storage backend."""
+    match b := config.storage_backend:
+        case "minio":
+            return MinioStorageBackend()
+        case _:
+            raise ValueError(f"Unsupported storage backend: {b}")
 
 
-default: "StorageBackend" = lazy_object_proxy.Proxy(get_default_storage)
-"""Default storage backend instance."""
+default: "StorageBackend" = lazy_object_proxy.Proxy(create_default_backend)
+"""Default storage backend instance (lazy object)."""

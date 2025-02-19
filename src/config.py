@@ -1,5 +1,6 @@
 import functools
 import pathlib
+import typing
 
 import lazy_object_proxy
 from pydantic import Field
@@ -21,6 +22,12 @@ class Config(BaseSettings):
 
     # Main app config.
     log_level: str = Field(default="info", description="The log level.")
+    storage_backend: typing.Literal["minio"] = Field(
+        default="minio", description="The remote storage backend used for storing state files."
+    )
+    lock_backend: typing.Literal["minio"] = Field(
+        default="minio", description="The remote storage backend used for state file locking."
+    )
 
     # Minio connection config.
     minio_host: str = Field(default="play.min.io", description="The MinIO host.")

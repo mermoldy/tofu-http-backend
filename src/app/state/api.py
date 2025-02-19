@@ -5,7 +5,9 @@ import pydantic_core
 from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import Request
+from fastapi import status
 
+from src import lock
 from src import log
 from src import storage
 
@@ -15,6 +17,48 @@ from . import types
 LOG = log.get_logger(__name__)
 
 router = APIRouter(prefix="/state")
+
+
+@router.post("/lock/{state_id:path}", name="path-convertor", status_code=status.HTTP_200_OK)
+async def lock_state(state_id: str, lock_info: types.LockInfo) -> None:
+    """
+    Lock the state by its ID.
+
+    The endpoint will return a 423: Locked or 409: Conflict with
+    the holding lock info when it's already taken, 200: OK for success.
+    """
+    try:
+        lock.default.lock(state_id, lock_info_dict := lock_info.model_dump())
+    except lock.AlreadyLocked as err:
+        LOG.debug("The lock backend error. %s", str(err))
+        raise HTTPException(409, detail=f"State with ID {state_id} already locked.")
+    except lock.Error as err:
+        LOG.error("The lock backend error. %s", str(err))
+        raise HTTPException(502, detail=f"Failed to access the {lock.default.name} lock backend.")
+    LOG.info("Locked the state.", state_id=state_id, **lock_info_dict)
+
+
+@router.post("/unlock/{state_id:path}", name="path-convertor", status_code=status.HTTP_200_OK)
+async def unlock_state(state_id: str, request: Request) -> None:
+    """
+    Unlock the state by its ID.
+
+    The endpoint will return a 423: Locked or 409: Conflict with
+    the holding lock info when it's already taken, 200: OK for success.
+    """
+    b = await request.body()
+    LOG.info("BODY", b=b, q=request.query_params)
+    try:
+        lock_info_dict = lock.default.unlock(state_id)
+    except lock.NotLocked as err:
+        LOG.debug("The lock backend error. %s", str(err))
+        raise HTTPException(409, detail=f"State with ID {state_id} is not locked.")
+    except lock.Error as err:
+        LOG.error("The lock backend error. %s", str(err))
+        raise HTTPException(502, detail=f"Failed to access the {lock.default.name} lock backend.")
+
+    lock_info = types.LockInfo(**lock_info_dict)
+    LOG.info("Removed lock from the state.", state_id=state_id, **lock_info.model_dump())
 
 
 @router.get("/{state_id:path}", name="path-convertor")
@@ -30,7 +74,7 @@ async def get_state(state_id: str) -> types.TerraformState:
     except storage.Error as err:
         LOG.debug("The storage backend error. %s", str(err))
         raise HTTPException(
-            503, detail=f"Failed to access the {storage.default.name} storage backend."
+            502, detail=f"Failed to access the {storage.default.name} storage backend."
         )
 
     try:
@@ -54,7 +98,7 @@ async def post_state(state_id: str, request: Request) -> None:
     except storage.Error as err:
         LOG.debug("The storage backend error. %s", str(err))
         raise HTTPException(
-            503, detail=f"Failed to access the {storage.default.name} storage backend."
+            502, detail=f"Failed to access the {storage.default.name} storage backend."
         )
     else:
         LOG.info("Created state.", state_id=state_id, sha256=sha256)
@@ -73,27 +117,5 @@ async def delete_state(state_id: str) -> None:
     except storage.Error as err:
         LOG.debug("The storage backend error. %s", str(err))
         raise HTTPException(
-            503, detail=f"Failed to access the {storage.default.name} storage backend."
+            502, detail=f"Failed to access the {storage.default.name} storage backend."
         )
-
-
-@router.delete("/{state_id:path}/lock", name="path-convertor")
-async def lock_state(state_id: str) -> dict:
-    """
-    Lock the state by its ID.
-
-    The endpoint will return a 423: Locked or 409: Conflict with
-    the holding lock info when it's already taken, 200: OK for success.
-    """
-    raise HTTPException(status_code=404, detail="State not found")
-
-
-@router.delete("/{state_id:path}/unlock", name="path-convertor")
-async def unlock_state(state_id: str) -> dict:
-    """
-    Unlock the state by its ID.
-
-    The endpoint will return a 423: Locked or 409: Conflict with
-    the holding lock info when it's already taken, 200: OK for success.
-    """
-    raise HTTPException(status_code=404, detail="State not found")
