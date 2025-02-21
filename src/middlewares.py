@@ -11,7 +11,7 @@ from uvicorn.protocols import utils
 from src import log
 from src.config import config
 
-__all__ = ["LogMiddleware"]
+__all__ = ["LogMiddleware", "StateAuthnMiddleware"]
 
 LOG_ACCESS = log.get_logger("api.access")
 LOG_ERROR = log.get_logger("api.error")
@@ -68,18 +68,19 @@ class LogMiddleware(base.BaseHTTPMiddleware):
             return response
 
 
-class AuthnMiddleware(base.BaseHTTPMiddleware):
-    """The HTTP basic authentication middleware."""
+class StateAuthnMiddleware(base.BaseHTTPMiddleware):
+    """The HTTP basic authentication middleware for `/state/*` endpoints."""
 
     async def dispatch(
         self, request: fastapi.Request, call_next: base.RequestResponseEndpoint
     ) -> fastapi.Response:
-        if not ((h := request.headers.get("Authorization")) and h.startswith("Basic ")):
-            return fastapi.Response(
-                status_code=401, content="Unauthorized. Basic authentication required."
-            )
-        if h.removeprefix("Basic").strip() != _build_auth_token():
-            return fastapi.Response(
-                status_code=403, content="Forbidden. The username or password is incorrect."
-            )
+        if request.url.path.startswith("/state/"):
+            if not ((h := request.headers.get("Authorization")) and h.startswith("Basic ")):
+                return fastapi.Response(
+                    status_code=401, content="Unauthorized. Basic authentication required."
+                )
+            if h.removeprefix("Basic").strip() != _build_auth_token():
+                return fastapi.Response(
+                    status_code=403, content="Forbidden. The username or password is incorrect."
+                )
         return await call_next(request)

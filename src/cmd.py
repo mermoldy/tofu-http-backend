@@ -26,7 +26,6 @@ LOG = log.get_logger(__name__)
 LOG.info("Starting OpenTofu HTTP backend...")
 
 app = fastapi.FastAPI()
-app.add_middleware(middlewares.AuthnMiddleware)
-
+app.add_middleware(middlewares.StateAuthnMiddleware)
 app.add_middleware(middlewares.LogMiddleware)
 app.include_router(state.api.router)

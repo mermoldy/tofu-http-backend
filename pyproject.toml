@@ -91,14 +91,14 @@ docstring-code-line-length = 100
 skip-magic-trailing-comma = true
 indent-style = "space"
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 force-single-line = true
 force-wrap-aliases = true
 combine-as-imports = true
 
-[tool.ruff.flake8-pytest-style]
+[tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
 mark-parentheses = false
 
-[tool.ruff.flake8-tidy-imports]
+[tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"

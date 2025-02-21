@@ -45,6 +45,13 @@ $~ ./cli.py dev
 The application entrypoint is placed at [src/cmd.py](src/cmd.py) module.
 By default, the application runs on port 8000.
 
+Run linters:
+
+```console
+$~ ruff check src/
+$~ mypy src/
+```
+
 ## Build
 
 Use `uv pip compile pyproject.toml` to compile the production dependencies.
@@ -61,7 +68,7 @@ see [tests](./tests/) and [examples](./examples/) for more.
 
 ## API Documentation
 
-The interactive API documentation is built using FastAPI and is available at <http://127.0.0.1:8000/docs>.
+The interactive API documentation is built using FastAPI and is available at <http://0.0.0.0:8000/docs>. OpenAPI schema is available at <http://0.0.0.0:8000/openapi.json>
 
 ## Configuration Parameters
 
