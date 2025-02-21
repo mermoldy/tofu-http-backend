@@ -7,7 +7,7 @@ Implementation of the OpenTofu HTTP backend as part of the Scalr home assignment
 - [Development](#development)
 - [Testing](#testing)
 - [API documentation](#api-documentation)
-- [Usage example](#usage-example)
+- [Configuration Parameters](#configuration-parameters)
 - [Usage example](#usage-example)
 
 ## Design
@@ -59,9 +59,7 @@ $~ pytest
 
 see [tests](./tests/) for more.
 
-## API documentation
-
-API Documentation
+## API Documentation
 
 The interactive API documentation is built using FastAPI and is available at <http://127.0.0.1:8000/docs>.
 
