@@ -81,9 +81,8 @@ The table below outlines the configuration options for the application.
 | `minio_access_key` | `str`                | _Required_                     | The MinIO access key. |
 | `minio_secret_key` | `str`                | _Required_                     | The MinIO private secret key. |
 
-## **Environment Variables Support**
-
-Configuration properties can also be loaded from environment variables by using the `TOFU_HTTP_<UPPERCASE_KEY>` prefix.
+> [!TIP]
+> All configuration properties can also be loaded from environment variables by using the `TOFU_HTTP_<UPPERCASE_KEY>` prefix.
 
 For example:
 
@@ -109,7 +108,7 @@ terraform {
 }
 ```
 
-Run the server using Docker with the following command:
+Run the server using Docker with the following command, using the pre-built image:
 
 ```console
 $~ docker run -it -p 8000:8000 -e TOFU_HTTP_USERNAME=testscalr -e TOFU_HTTP_PASSWORD=testscalr mermoldy/tofu-http-server:0.1.0
