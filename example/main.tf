@@ -6,8 +6,8 @@ terraform {
     unlock_address = "http://localhost:8000/state/unlock/project/1"
     lock_method    = "POST"
     unlock_method  = "POST"
-    username       = "scalr"
-    password       = "scalr"
+    username       = "testscalr"
+    password       = "testscalr"
   }
 }
 

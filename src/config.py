@@ -6,6 +6,7 @@ import lazy_object_proxy
 from pydantic import Field
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
+from pydantic_settings import EnvSettingsSource
 from pydantic_settings import PydanticBaseSettingsSource
 from pydantic_settings import SettingsConfigDict
 from pydantic_settings import TomlConfigSettingsSource
@@ -17,7 +18,9 @@ DEFAULT_MINIO_BUCKET = "e1cc89bb-b9f5-4b29-8163-c3e8da21bbba"
 class Config(BaseSettings):
     """The application configuration."""
 
-    model_config = SettingsConfigDict(toml_file=pathlib.Path("config.toml"))
+    model_config = SettingsConfigDict(
+        toml_file=pathlib.Path("config.toml"), env_prefix="TOFU_HTTP_"
+    )
 
     # Main app config.
     log_level: str = Field(default="info", description="The log level.")
@@ -54,7 +57,7 @@ class Config(BaseSettings):
     def settings_customise_sources(
         cls, settings_cls: type[BaseSettings], *args, **kwargs
     ) -> tuple[PydanticBaseSettingsSource, ...]:
-        return (TomlConfigSettingsSource(settings_cls),)
+        return (EnvSettingsSource(settings_cls), TomlConfigSettingsSource(settings_cls))
 
 
 @functools.lru_cache

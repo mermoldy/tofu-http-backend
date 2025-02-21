@@ -3,7 +3,6 @@ log_level = "info"
 
 # The username and password for the basic auth.
 username = "scalr"
-password = "scalr"
 
 # The credentials for the MinIO server.
 # XXX: Public keys for the public MinIO service (play.min.io) provided by

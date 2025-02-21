@@ -20,6 +20,10 @@ dependencies = [
 [dependency-groups]
 dev = ["pytest==8.3.*", "mypy==1.15.*", "ruff==0.9.*"]
 
+[tool.uv.pip]
+output-file = "requirements.txt"
+universal = true
+
 [tool.mypy]
 python_version = "3.12"
 mypy_path = ["${MYPY_CONFIG_FILE_DIR}/typings"]
