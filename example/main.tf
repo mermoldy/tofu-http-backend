@@ -1,3 +1,4 @@
+
 terraform {
   backend "http" {
     address        = "http://localhost:8000/state/project/1"
@@ -5,7 +6,8 @@ terraform {
     unlock_address = "http://localhost:8000/state/unlock/project/1"
     lock_method    = "POST"
     unlock_method  = "POST"
-    # Optional: (Authentication token if implemented or any other required headers)
+    username       = "scalr"
+    password       = "scalr"
   }
 }
 
@@ -15,6 +17,6 @@ resource "null_resource" "example" {
   }
 
   provisioner "local-exec" {
-    command = "sleep 20"
+    command = "sleep 10"
   }
 }

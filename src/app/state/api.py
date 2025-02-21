@@ -46,8 +46,6 @@ async def unlock_state(state_id: str, request: Request) -> None:
     The endpoint will return a 423: Locked or 409: Conflict with
     the holding lock info when it's already taken, 200: OK for success.
     """
-    b = await request.body()
-    LOG.info("BODY", b=b, q=request.query_params)
     try:
         lock_info_dict = lock.default.unlock(state_id)
     except lock.NotLocked as err:
