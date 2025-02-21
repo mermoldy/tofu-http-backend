@@ -2,7 +2,6 @@
 The remote locking backend for the HTTP state server.
 """
 
-import functools
 import typing
 from typing import Protocol
 from typing import TypedDict
@@ -31,13 +30,20 @@ class NotFound(Error):
 class AlreadyLocked(Error):
     """Raised when the requested object ID is already locked."""
 
+    def __init__(self, msg: str, lock_info: "LockInfo") -> None:
+        """
+        :param lock_info: Information about an existing lock.
+        """
+        self.lock_info = lock_info
+        super().__init__(msg)
+
 
 class NotLocked(Error):
     """Raised when the requested object ID is not locked."""
 
 
 class LockInfo(TypedDict):
-    """Represents the minimal set of fields for lock metainfo."""
+    """Represents the minimal set of fields for lock lock_info."""
 
     id: str
     who: str
@@ -50,11 +56,11 @@ class LockBackend(Protocol):
 
     name: str
 
-    def lock(self, key: str, metainfo: LockInfo) -> None:
+    def lock(self, key: str, lock_info: LockInfo) -> None:
         """Lock the given `key`.
 
         :param key: The ID for lock to acqiure.
-        :param metainfo: The meta information for lock to acqiure.
+        :param lock_info: The meta information for lock to acqiure.
 
         :raises :class:`NotFound`
         :raises :class:`AlreadyLocked`
@@ -90,11 +96,11 @@ class MinioLockBackend:
         self._storage = storage.MinioStorageBackend()
         super().__init__()
 
-    def lock(self, key: str, metainfo: LockInfo) -> None:
+    def lock(self, key: str, lock_info: LockInfo) -> None:
         """Lock the given `key` in a MinIO bucket.
 
         :param key: The ID for lock to acqiure.
-        :param metainfo: The meta information for lock to acqiure.
+        :param lock_info: The meta information for lock to acqiure.
 
         :raises :class:`NotFound`
         :raises :class:`AlreadyLocked`
@@ -102,15 +108,17 @@ class MinioLockBackend:
         lock_key = f"{key}.lock"
         try:
             try:
-                existing_metainfo = orjson.loads(self._storage.get(lock_key))
-                if existing_metainfo:
-                    id_ = existing_metainfo.get("id", "null")
-                    who = existing_metainfo.get("who", "unknown")
-                    raise AlreadyLocked(f"The {key} has lock with ID {id_} by {who}.")
+                existing_lock_info = orjson.loads(self._storage.get(lock_key))
+                if existing_lock_info:
+                    id_ = existing_lock_info.get("id", "null")
+                    who = existing_lock_info.get("who", "unknown")
+                    raise AlreadyLocked(
+                        f"The {key} has lock with ID {id_} by {who}.", existing_lock_info
+                    )
             except storage.NotFound as err:
                 pass
 
-            self._storage.create(lock_key, orjson.dumps(metainfo))
+            self._storage.create(lock_key, orjson.dumps(lock_info))
         except storage.Error as err:
             raise Error(str(err))
 
@@ -124,20 +132,19 @@ class MinioLockBackend:
         """
         lock_key = f"{key}.lock"
         try:
-            metainfo = orjson.loads(self._storage.get(lock_key))
-            if not isinstance(metainfo, dict):
-                raise ValueError("Unexpected metainfo type.")
+            lock_info = orjson.loads(self._storage.get(lock_key))
+            if not isinstance(lock_info, dict):
+                raise ValueError("Unexpected lock_info type.")
             self._storage.delete(lock_key)
-            return typing.cast(LockInfo, metainfo)
+            return typing.cast(LockInfo, lock_info)
         except storage.NotFound as err:
             raise NotLocked(f"The {key} lock not acquired.")
         except storage.Error as err:
             raise Error(str(err))
         except ValueError as err:
-            raise Error("Cannot decode the lock metainfo. %s", str(err))
+            raise Error("Cannot decode the lock lock_info. %s", str(err))
 
 
-@functools.lru_cache
 def create_default_backend() -> LockBackend:
     """Create the default lock backend."""
     match b := config.lock_backend:

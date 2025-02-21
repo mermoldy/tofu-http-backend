@@ -2,7 +2,6 @@
 The remote storage backend for the HTTP state server.
 """
 
-import functools
 import io
 from typing import Protocol
 
@@ -112,7 +111,6 @@ class MinioStorageBackend:
             raise Error(str(err))
 
 
-@functools.lru_cache
 def create_default_backend() -> StorageBackend:
     """Create the default storage backend."""
     match b := config.storage_backend:

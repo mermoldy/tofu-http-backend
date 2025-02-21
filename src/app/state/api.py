@@ -1,11 +1,15 @@
 """The HTTP state API routes."""
 
+import typing
+
 import orjson
 import pydantic_core
 from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import Request
 from fastapi import status
+from fastapi.responses import JSONResponse
+from fastapi.responses import Response
 
 from src import lock
 from src import log
@@ -20,7 +24,7 @@ router = APIRouter(prefix="/state")
 
 
 @router.post("/lock/{state_id:path}", name="path-convertor", status_code=status.HTTP_200_OK)
-async def lock_state(state_id: str, lock_info: types.LockInfo) -> None:
+async def lock_state(state_id: str, lock_info: types.LockInfo) -> Response:
     """
     Lock the state by its ID.
 
@@ -28,14 +32,17 @@ async def lock_state(state_id: str, lock_info: types.LockInfo) -> None:
     the holding lock info when it's already taken, 200: OK for success.
     """
     try:
-        lock.default.lock(state_id, lock_info_dict := lock_info.model_dump())
+        lock.default.lock(
+            state_id, lock_info_dict := typing.cast(lock.LockInfo, lock_info.model_dump())
+        )
     except lock.AlreadyLocked as err:
-        LOG.debug("The lock backend error. %s", str(err))
-        raise HTTPException(409, detail=f"State with ID {state_id} already locked.")
+        LOG.warning("The lock backend error. %s", str(err), lock_info=lock_info)
+        return JSONResponse(err.lock_info, status_code=409)
     except lock.Error as err:
         LOG.error("The lock backend error. %s", str(err))
         raise HTTPException(502, detail=f"Failed to access the {lock.default.name} lock backend.")
-    LOG.info("Locked the state.", state_id=state_id, **lock_info_dict)
+    LOG.info("Locked the state.", state_id=state_id, lock_info=lock_info_dict)
+    return Response(status_code=200)
 
 
 @router.post("/unlock/{state_id:path}", name="path-convertor", status_code=status.HTTP_200_OK)
@@ -43,19 +50,26 @@ async def unlock_state(state_id: str, request: Request) -> None:
     """
     Unlock the state by its ID.
 
+    The **force-unlock** implementation ignores the lock ID because Terraform
+    lacks proper force-unlock functionality for the HTTP backend.
+    See [this issue](https://github.com/hashicorp/terraform/issues/28421) for more details.
+    As a result, when you run `tofu force-unlock XXX`, Tofu/Terraform does not
+    pass the lock ID (`XXX`) to the HTTP backend, causing the backend to skip
+    lock ID verification.
+
     The endpoint will return a 423: Locked or 409: Conflict with
     the holding lock info when it's already taken, 200: OK for success.
     """
     try:
         lock_info_dict = lock.default.unlock(state_id)
     except lock.NotLocked as err:
-        LOG.debug("The lock backend error. %s", str(err))
+        LOG.warning("The lock backend error. %s", str(err))
         raise HTTPException(409, detail=f"State with ID {state_id} is not locked.")
     except lock.Error as err:
         LOG.error("The lock backend error. %s", str(err))
         raise HTTPException(502, detail=f"Failed to access the {lock.default.name} lock backend.")
 
-    lock_info = types.LockInfo(**lock_info_dict)
+    lock_info = types.LockInfo(**lock_info_dict)  # type: ignore
     LOG.info("Removed lock from the state.", state_id=state_id, **lock_info.model_dump())
 
 
@@ -89,8 +103,9 @@ async def post_state(state_id: str, request: Request) -> None:
     """Create the state by its ID."""
     body = await request.body()
     sha256 = await service.sha256_digest(body)
+    size_mb = round(len(body) / (1024 * 1024), 3)
 
-    LOG.info("Creating state...", state_id=state_id, sha256=sha256)
+    LOG.info("Creating state...", state_id=state_id, sha256=sha256, size_mb=size_mb)
     try:
         storage.default.create(state_id, body)
     except storage.Error as err:
@@ -99,7 +114,7 @@ async def post_state(state_id: str, request: Request) -> None:
             502, detail=f"Failed to access the {storage.default.name} storage backend."
         )
     else:
-        LOG.info("Created state.", state_id=state_id, sha256=sha256)
+        LOG.info("Created state.", state_id=state_id, sha256=sha256, size_mb=size_mb)
 
 
 @router.delete("/{state_id:path}", name="path-convertor")

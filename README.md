@@ -1,5 +1,7 @@
 # Tofu HTTP Backend
 
+![Static Badge](https://img.shields.io/badge/Version-v0.1.0-orange)
+
 Implementation of the OpenTofu HTTP backend as part of the Scalr home assignment: <https://github.com/Scalr/home-assigment-tofu-http-backend>
 
 - [Design](#design)
@@ -9,6 +11,7 @@ Implementation of the OpenTofu HTTP backend as part of the Scalr home assignment
 - [API documentation](#api-documentation)
 - [Configuration Parameters](#configuration-parameters)
 - [Usage example](#usage-example)
+- [Implementation notices](implementation-notices)
 
 ## Design
 
@@ -16,9 +19,6 @@ The application core is built using the [FastAPI](https://fastapi.tiangolo.com/)
 
 The application layout follows the [Hexagonal Architecture](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) pattern.
 The configuration is located in [config.toml](./config.toml) and also supports loading properties from shell variables prefixed with `TOFU_HTTP_<UPPERCASE_KEY>`.
-
-> [!WARNING]
-> Since MinIO does not natively support locking, the lock backend implements a simple mechanism by placing a `.lock` file with metadata in storage alongside the main blob file. However, this approach may not be sufficient for high-concurrency applications, as it can lead to collisions or race conditions. It is provided solely as an example.
 
 ## Setup
 
@@ -57,7 +57,7 @@ Then, run `docker build . -t tofu-http-server:latest` to build the Docker image,
 $~ pytest
 ```
 
-see [tests](./tests/) for more.
+see [tests](./tests/) and [examples](./examples/) for more.
 
 ## API Documentation
 
@@ -109,5 +109,17 @@ terraform {
 Run the server using Docker with the following command, using the pre-built image:
 
 ```console
-$~ docker run -it -p 8000:8000 -e TOFU_HTTP_USERNAME=testscalr -e TOFU_HTTP_PASSWORD=testscalr mermoldy/tofu-http-server:0.1.0
+$~ docker run -it -p 8000:8000 -e TOFU_HTTP_USERNAME=testscalr -e TOFU_HTTP_PASSWORD=testscalr mermoldy/tofu-http-server:latest
 ```
+
+## Implementation notices
+
+## MinIO Lock Backend
+
+Since MinIO does not natively support locking, the lock backend implements a simple mechanism by placing a `.lock` file with metadata in storage alongside the main blob file. However, this approach may not be sufficient for high-concurrency applications, as it can lead to collisions or race conditions. It is provided solely as an example.
+
+## Force-Unlock Behavior
+
+The **force-unlock** implementation ignores the lock ID because Terraform lacks proper force-unlock functionality for the HTTP backend. See [this issue](https://github.com/hashicorp/terraform/issues/28421) for more details.
+
+As a result, when you run `tofu force-unlock XXX`, Tofu/Terraform does not pass the lock ID (`XXX`) to the HTTP backend, causing the backend to skip lock ID verification.
