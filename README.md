@@ -10,7 +10,7 @@ Implementation of the OpenTofu HTTP backend as part of the Scalr home assignment
 
 ## Design
 
-The application core is built using the [FastAPI](https://fastapi.tiangolo.com/) asyncio server with the [Uvicorn ASGI](https://www.uvicorn.org/) server. Logging is handled using the [structlog](https://www.structlog.org/en/stable/) protocol, and testing is implemented with pytest. [MinIO](https://github.com/minio/minio) is used as an example for both storage and the lock backend.
+The application core is built using the [FastAPI](https://fastapi.tiangolo.com/) asyncio server with the [Uvicorn ASGI](https://www.uvicorn.org/) server. Logging is handled using the [structlog](https://www.structlog.org/en/stable/) protocol, and testing is implemented with [pytest](https://docs.pytest.org/en/stable/) framework. [MinIO](https://github.com/minio/minio) is used as an example for both storage and the lock backend.
 
 The application layout follows the [Hexagonal Architecture](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) pattern.
 The configuration is located in [config.toml](./config.toml).
