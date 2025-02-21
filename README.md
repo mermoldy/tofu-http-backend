@@ -120,11 +120,11 @@ $~ docker run -it -p 8000:8000 -e TOFU_HTTP_USERNAME=testscalr -e TOFU_HTTP_PASS
 
 ## Implementation notices
 
-## MinIO Lock Backend
+### MinIO Lock Backend
 
 Since MinIO does not natively support locking, the lock backend implements a simple mechanism by placing a `.lock` file with metadata in storage alongside the main blob file. However, this approach may not be sufficient for high-concurrency applications, as it can lead to collisions or race conditions. It is provided solely as an example.
 
-## Force-Unlock Behavior
+### Force-Unlock Behavior
 
 The **force-unlock** implementation ignores the lock ID because Terraform lacks proper force-unlock functionality for the HTTP backend. See [this issue](https://github.com/hashicorp/terraform/issues/28421) for more details.
 
