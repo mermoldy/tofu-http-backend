@@ -86,8 +86,7 @@ The table below outlines the configuration options for the application.
 | `minio_access_key` | `str`                | _Required_                     | The MinIO access key. |
 | `minio_secret_key` | `str`                | _Required_                     | The MinIO private secret key. |
 
-> [!TIP]
-> All configuration properties can also be loaded from environment variables by using the `TOFU_HTTP_<UPPERCASE_KEY>` prefix.
+All configuration properties can also be loaded from environment variables by using the `TOFU_HTTP_<UPPERCASE_KEY>` prefix.
 
 For example:
 
