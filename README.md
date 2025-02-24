@@ -32,6 +32,7 @@ $~curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ```console
 $~ uv sync
+$~ . .venv/bin/activate
 ```
 
 ## Development
