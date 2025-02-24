@@ -65,7 +65,7 @@ Then, run `docker build . -t tofu-http-server:latest` to build the Docker image,
 $~ pytest
 ```
 
-see [tests](./tests/) and [examples](./examples/) for more.
+see [tests](./tests/) and [examples](./example/) for more.
 
 ## API Documentation
 
