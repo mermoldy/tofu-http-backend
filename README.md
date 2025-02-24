@@ -11,7 +11,7 @@ Implementation of the OpenTofu HTTP backend as part of the Scalr home assignment
 - [API documentation](#api-documentation)
 - [Configuration Parameters](#configuration-parameters)
 - [Usage example](#usage-example)
-- [Implementation notices](implementation-notices)
+- [Implementation notices](#implementation-notices)
 
 ## Design
 
