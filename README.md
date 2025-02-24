@@ -31,7 +31,7 @@ $~curl -LsSf https://astral.sh/uv/install.sh | sh
 - Sync the dependencies:
 
 ```console
-$~ uv sync
+$~ uv sync --all-group
 $~ . .venv/bin/activate
 ```
 
