@@ -2,7 +2,7 @@
 
 ![Static Badge](https://img.shields.io/badge/Version-v0.1.0-orange)
 
-Implementation of the OpenTofu HTTP backend as part of the Scalr home assignment: <https://github.com/Scalr/home-assigment-tofu-http-backend>
+Implementation of the OpenTofu HTTP backend as part of the Scalr home assignment: <https://github.com/Scalr/home-assignment-tofu-http-backend>
 
 - [Design](#design)
 - [Setup](#setup)
